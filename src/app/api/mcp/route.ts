@@ -137,9 +137,7 @@ const handler = createMcpHandler(
 
 async function guarded(request: Request): Promise<Response> {
   try {
-    const limited = await guard(request, getDb(), "mcp", {
-      burstPerMinute: 300,
-    });
+    const limited = await guard(request, getDb(), "mcp");
     if (limited) return limited;
   } catch {
     // If the database is unreachable, still serve the MCP handshake.

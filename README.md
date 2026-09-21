@@ -115,9 +115,9 @@ everyone (enforced atomically in Postgres, per IP and globally):
 
 | Limit | Value |
 | --- | --- |
-| Burst | 60 requests / minute / IP |
-| Daily per IP | 2,000 requests / day |
-| Daily global | 50,000 requests / day |
+| Burst | 5 requests / minute / IP |
+| Daily per IP | 100 requests / day |
+| Daily global | 20,000 requests / day |
 | Max page size | 20,000 rows |
 
 Over-limit responses use HTTP `429` with a `Retry-After` header. The counters are

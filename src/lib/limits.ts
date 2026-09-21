@@ -13,9 +13,9 @@ function intFromEnv(name: string, fallback: number): number {
  * across every serverless instance.
  */
 export const LIMITS = {
-  burstPerMinute: intFromEnv("RATE_LIMIT_PER_MINUTE", 60),
-  dailyPerIp: intFromEnv("RATE_LIMIT_PER_DAY_IP", 2_000),
-  dailyGlobal: intFromEnv("RATE_LIMIT_PER_DAY_GLOBAL", 50_000),
+  burstPerMinute: intFromEnv("RATE_LIMIT_PER_MINUTE", 5),
+  dailyPerIp: intFromEnv("RATE_LIMIT_PER_DAY_IP", 100),
+  dailyGlobal: intFromEnv("RATE_LIMIT_PER_DAY_GLOBAL", 20_000),
 };
 
 export function clientIp(request: Request): string {

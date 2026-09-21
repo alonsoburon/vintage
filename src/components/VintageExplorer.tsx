@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { SeriesSummary } from "@/lib/types";
 
-interface HistRow {
+export interface HistoryRow {
   obs_date: string;
   value: number;
   published_at: string;
@@ -77,16 +77,22 @@ function buildPath(
 export default function VintageExplorer({
   series,
   dbError,
+  initialSeriesId = "",
+  initialRows = [],
 }: {
   series: SeriesSummary[];
   dbError: string | null;
+  initialSeriesId?: string;
+  initialRows?: HistoryRow[];
 }) {
   const firstWithData = series.find((item) => item.observations > 0);
-  const [selectedId, setSelectedId] = useState(
-    firstWithData?.id ?? series[0]?.id ?? "",
-  );
+  const fallbackId = firstWithData?.id ?? series[0]?.id ?? "";
+  const [selectedId, setSelectedId] = useState(initialSeriesId || fallbackId);
   const [query, setQuery] = useState("");
-  const [rows, setRows] = useState<HistRow[]>([]);
+  const [rows, setRows] = useState<HistoryRow[]>(initialRows);
+  const skipFirstFetch = useRef(
+    initialRows.length > 0 && initialSeriesId.length > 0,
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [stepIndex, setStepIndex] = useState(0);
@@ -106,6 +112,15 @@ export default function VintageExplorer({
 
   useEffect(() => {
     if (!selectedId) return;
+
+    // The initial series is rendered on the server, so the first view costs
+    // zero API calls.
+    if (skipFirstFetch.current && selectedId === initialSeriesId) {
+      skipFirstFetch.current = false;
+      appliedRef.current = false;
+      return;
+    }
+
     const controller = new AbortController();
     appliedRef.current = false;
     setLoading(true);
@@ -120,10 +135,15 @@ export default function VintageExplorer({
       { signal: controller.signal },
     )
       .then(async (response) => {
+        if (response.status === 429) {
+          throw new Error(
+            "Se alcanzó el límite de consultas de la API. Espera un momento e inténtalo de nuevo.",
+          );
+        }
         if (!response.ok) {
           throw new Error(`No se pudo cargar la serie (HTTP ${response.status}).`);
         }
-        return (await response.json()) as { observations: HistRow[] };
+        return (await response.json()) as { observations: HistoryRow[] };
       })
       .then((data) => setRows(data.observations ?? []))
       .catch((cause: unknown) => {
@@ -135,7 +155,7 @@ export default function VintageExplorer({
       });
 
     return () => controller.abort();
-  }, [selectedId]);
+  }, [selectedId, initialSeriesId]);
 
   const vintages = useMemo(
     () => Array.from(new Set(rows.map((row) => row.published_at))).sort(),
@@ -164,7 +184,7 @@ export default function VintageExplorer({
   const asOf = steps[safeIndex] ?? null;
 
   const { today, asKnown } = useMemo(() => {
-    const byDate = new Map<string, HistRow[]>();
+    const byDate = new Map<string, HistoryRow[]>();
     for (const row of rows) {
       const bucket = byDate.get(row.obs_date);
       if (bucket) bucket.push(row);
@@ -174,7 +194,7 @@ export default function VintageExplorer({
     const todayPoints: Point[] = [];
     const asKnownPoints: Point[] = [];
     for (const date of dates) {
-      const bucket = byDate.get(date) as HistRow[];
+      const bucket = byDate.get(date) as HistoryRow[];
       todayPoints.push({ date, value: bucket[bucket.length - 1].value });
       if (asOf) {
         for (let i = bucket.length - 1; i >= 0; i -= 1) {
