@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import ThemeToggle from "@/components/ThemeToggle";
 import VintageExplorer, { type HistoryRow } from "@/components/VintageExplorer";
 import { getDb } from "@/lib/db";
 import { LIMITS } from "@/lib/limits";
@@ -72,6 +73,7 @@ export default async function HomePage() {
           <a href={REPO_URL}>GitHub</a>
           <a href={`${origin}/api`}>API</a>
           <a href={`${origin}/api/mcp`}>MCP</a>
+          <ThemeToggle />
         </nav>
       </header>
 

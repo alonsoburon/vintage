@@ -160,9 +160,13 @@ returns each period exactly as it was known that day.
 
 The landing page lets you search series and drag a date slider to compare the
 latest revision ("series of today") against the data that was known on any
-publication date.
+publication date. It ships with a light/dark theme switch and deep-linkable
+vintages (`/?as_of=2024-06-30&theme=dark`).
 
-![demo](docs/demo.png)
+<p>
+  <img src="docs/demo.png" alt="vintage demo, light theme" width="49%">
+  <img src="docs/demo-dark.png" alt="vintage demo, dark theme" width="49%">
+</p>
 
 ---
 

@@ -13,13 +13,18 @@ export const metadata: Metadata = {
   },
 };
 
+const THEME_SCRIPT = `(function(){try{var p=new URLSearchParams(location.search);var q=p.get('theme');var s=localStorage.getItem('vintage-theme');var t=q==='dark'||q==='light'?q:(s||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));document.documentElement.dataset.theme=t;}catch(e){document.documentElement.dataset.theme='light';}})();`;
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es">
+    <html lang="es" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
       <body>{children}</body>
     </html>
   );
