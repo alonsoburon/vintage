@@ -3,7 +3,7 @@
 **Point-in-time macroeconomic data for Chile — as it was known on each date.**
 
 [![CI](https://github.com/alonsoburon/vintage/actions/workflows/ci.yml/badge.svg)](https://github.com/alonsoburon/vintage/actions/workflows/ci.yml)
-[![Deploy](https://img.shields.io/badge/Vercel-live-black?logo=vercel)](https://vintage-macro.vercel.app)
+[![Deploy](https://img.shields.io/badge/Vercel-live-black?logo=vercel)](https://vintage-gray-one.vercel.app)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![MCP](https://img.shields.io/badge/MCP-ready-6f42c1)](https://modelcontextprotocol.io)
 
@@ -16,9 +16,9 @@ single, precise question:
 It exposes an open REST API and an MCP server so both humans and AI agents can
 query data without look-ahead bias.
 
-- Live demo: https://vintage-macro.vercel.app
-- MCP endpoint: `https://vintage-macro.vercel.app/api/mcp`
-- API index: `https://vintage-macro.vercel.app/api`
+- Live demo: https://vintage-gray-one.vercel.app
+- MCP endpoint: `https://vintage-gray-one.vercel.app/api/mcp`
+- API index: `https://vintage-gray-one.vercel.app/api`
 
 ---
 
@@ -47,7 +47,7 @@ print read **0.5%**.
 | no `as_of` | `0.5` — the latest revision ("the series of today") |
 
 ```bash
-curl "https://vintage-macro.vercel.app/api/series/ipc/observations?as_of=2024-02-20"
+curl "https://vintage-gray-one.vercel.app/api/series/ipc/observations?as_of=2024-02-20"
 ```
 
 ---
@@ -72,7 +72,7 @@ via its REST API, and from **INE** series republished by the BCCh. See
 
 ## API
 
-Open and keyless. Base URL: `https://vintage-macro.vercel.app`
+Open and keyless. Base URL: `https://vintage-gray-one.vercel.app`
 
 | Method | Path | Description |
 | --- | --- | --- |
@@ -96,16 +96,16 @@ Open and keyless. Base URL: `https://vintage-macro.vercel.app`
 
 ```bash
 # Current revision
-curl "https://vintage-macro.vercel.app/api/series/desempleo/observations?from=2024-01-01"
+curl "https://vintage-gray-one.vercel.app/api/series/desempleo/observations?from=2024-01-01"
 
 # Exactly what was known on 2025-06-30
-curl "https://vintage-macro.vercel.app/api/series/imacec/observations?as_of=2025-06-30"
+curl "https://vintage-gray-one.vercel.app/api/series/imacec/observations?as_of=2025-06-30"
 
 # Full revision history, as CSV
-curl "https://vintage-macro.vercel.app/api/series/usd_clp/observations?history=true&format=csv"
+curl "https://vintage-gray-one.vercel.app/api/series/usd_clp/observations?history=true&format=csv"
 
 # Which publication dates exist
-curl "https://vintage-macro.vercel.app/api/series/ipc/vintages"
+curl "https://vintage-gray-one.vercel.app/api/series/ipc/vintages"
 ```
 
 ### Limits
@@ -136,7 +136,7 @@ Add it to Claude, Cursor or any MCP client:
 {
   "mcpServers": {
     "vintage": {
-      "url": "https://vintage-macro.vercel.app/api/mcp"
+      "url": "https://vintage-gray-one.vercel.app/api/mcp"
     }
   }
 }
