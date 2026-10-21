@@ -54,6 +54,26 @@ function nearlyEqual(a: number, b: number): boolean {
 }
 
 /**
+ * Retries a transient operation (e.g. a flaky upstream fetch) with linear
+ * backoff. The keyless mindicador source intermittently drops connections, so
+ * without this a single blip would silently skip a series for the whole day.
+ */
+async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      if (attempt < attempts) {
+        await new Promise((resolve) => setTimeout(resolve, 1_000 * attempt));
+      }
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error(String(lastError));
+}
+
+/**
  * Fetches the current state of a series, compares it with what is archived and
  * inserts only new periods or revisions. New periods get a reconstructed
  * `published_at` when the source does not expose one; revisions are stamped
@@ -70,13 +90,15 @@ export async function ingestSeries(
   await upsertSeries(sql, seriesToRecord(definition));
 
   const now = options.now ?? new Date();
-  const { adapter, observations } = await fetchSeriesRaw(definition, {
-    from: options.from,
-    to: options.to,
-    credentials: options.credentials,
-    fetchImpl: options.fetchImpl,
-    prefer: options.prefer,
-  });
+  const { adapter, observations } = await withRetry(() =>
+    fetchSeriesRaw(definition, {
+      from: options.from,
+      to: options.to,
+      credentials: options.credentials,
+      fetchImpl: options.fetchImpl,
+      prefer: options.prefer,
+    }),
+  );
 
   const existing = await getLatestValues(sql, definition.id);
   const rows: ObservationRecord[] = [];
@@ -145,21 +167,25 @@ export async function ingestAll(
   sql: Sql,
   options: IngestAllOptions = {},
 ): Promise<IngestResult[]> {
-  const results: IngestResult[] = [];
-  for (const definition of SERIES) {
-    try {
-      results.push(await ingestSeries(sql, { seriesId: definition.id, ...options }));
-    } catch (error) {
-      results.push({
-        seriesId: definition.id,
-        source: null,
-        fetched: 0,
-        inserted: 0,
-        revisions: 0,
-        unchanged: 0,
-        error: error instanceof Error ? error.message : String(error),
-      });
-    }
-  }
-  return results;
+  // Series are fetched concurrently: a sequential loop made the whole run the
+  // sum of every source latency, which on slow days pushed it past the 300s
+  // HTTP request timeout and aborted the ingestion. Concurrency keeps the total
+  // close to the slowest single series. Per-series failures are isolated.
+  return Promise.all(
+    SERIES.map(async (definition): Promise<IngestResult> => {
+      try {
+        return await ingestSeries(sql, { seriesId: definition.id, ...options });
+      } catch (error) {
+        return {
+          seriesId: definition.id,
+          source: null,
+          fetched: 0,
+          inserted: 0,
+          revisions: 0,
+          unchanged: 0,
+          error: error instanceof Error ? error.message : String(error),
+        };
+      }
+    }),
+  );
 }
